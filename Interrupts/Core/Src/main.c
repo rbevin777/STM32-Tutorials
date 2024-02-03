@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,10 +43,7 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
-// Static constant pointer to the hello world buffer we are transmitting.
-static const char *hello_world_buffer = "Hello Jupiter!\r\n";
-static HAL_StatusTypeDef ok_notok_s = HAL_OK;
+static bool flag_s = false;
 
 /* USER CODE END PV */
 
@@ -94,6 +91,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  char *tx_buffer = "IT'S WORKING!\r\n";
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,21 +102,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // First we transmit the hello world buffer out the transmit pin of UART2.
-	  ok_notok_s = HAL_UART_Transmit(&huart2, (uint8_t *)hello_world_buffer, 17, 100);
 
-	  if(ok_notok_s == HAL_OK)
+	  // If the flag is set true then send the tx_buffer data out over the UART.
+	  if (flag_s == true)
 	  {
-		  // If the UART transmission is okay then the green LED will stay off.
-		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+		  HAL_UART_Transmit(&huart2, (uint8_t *)tx_buffer, 15, 100);
+		  flag_s = false;
 	  }
-	  else
-	  {
-		  // If the UART transmission is not okay then the green LED will be turned on.
-		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
-	  }
-	  // Finally there is a delay of 1 Second.
-	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -207,10 +198,17 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GREEN_LED_Pin */
   GPIO_InitStruct.Pin = GREEN_LED_Pin;
@@ -219,11 +217,30 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GREEN_LED_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief This function handles EXTI line[15:10] interrupts.
+  */
+void EXTI15_10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+
+  // Here the flag is set to true when the interrupt has been triggered
+  flag_s = true;
+  /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(BUTTON_Pin);
+  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+
+  /* USER CODE END EXTI15_10_IRQn 1 */
+}
 
 /* USER CODE END 4 */
 
