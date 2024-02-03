@@ -50,3 +50,18 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# STM project specific 
+*.out
+*.build/
+*.cproject
+*.mxproject
+*.project
+*.launch
+*.ld
+*/.settings/*
+*.elf
+*.list
+*.map
+*.s
+*/Debug/*
