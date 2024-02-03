@@ -8,4 +8,4 @@ This subset of tutorials focuses on setting up a STM32 Nucleo board and as such 
 Also, there are some electronic circuits used throughout this series and requires components to be used in setting up those circuits. Of those that do have component circuits, basic circuit diagrams will be provided on the branch of each tutorial if that tutorial uses one. If there is no circuit for a tutorial the diagram folder will be empty on that branch.
 
 ## How to Use This Repo
-The main branch of this repo contains the Hello World project from the first video in the tutorial series. Every subsequent video is then housed on it's own branch.
+The main branch of this repo contains the Hello World project from the first video in the tutorial series. Every subsequent video is then housed on it's own branch. Simply clone the project and checkout the branch of the tutorial you wish to use.
