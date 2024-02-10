@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "periph_uart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -33,7 +34,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BUFFER_LEN 100u
 
 /* USER CODE END PD */
 
@@ -47,10 +47,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 static bool flag_s = false;
-static uint8_t tx_buffer_s[BUFFER_LEN]; // rx_data buffer
-static uint8_t rx_buffer_s[BUFFER_LEN]; // tx_data buffer
-static uint8_t rx_data_s; // receive buffer
-static uint32_t counter_s = 0; // count how many bytes are received
+
 
 static const char *it_works_s = "IT'S WORKING!\r\n";
 
@@ -100,11 +97,11 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  // Here these functions need called to get the UART ready to receive and transmit data over the UART using interrupts.
-  // Data sent out over the UART must be formatted, added to the tx_buffer_s buffer and sent from this buffer.
-  // Data received into UART is stored in rx_data_s buffer 1 character at a time which allows the user to look for specific characters.
-  HAL_UART_Transmit_IT(&huart2, tx_buffer_s, BUFFER_LEN);
-  HAL_UART_Receive_IT(&huart2, &rx_data_s, 1);
+  if (periph_uart_init(&huart2) == false)
+  {
+	  assert(false);
+  }
+
 
   /* USER CODE END 2 */
 
@@ -118,8 +115,7 @@ int main(void)
 	  // Code kept in place from the Interrupt tutorial. Operated by pressing the user button.
 	  if (flag_s == true)
 	  {
-		  strcpy((char* )tx_buffer_s, it_works_s);
-		  HAL_UART_Transmit(&huart2, tx_buffer_s, (uint16_t)BUFFER_LEN, 100);
+		  periph_uart_send_tx_data(&huart2, it_works_s, 100);
 		  flag_s = false;
 	  }
   }
@@ -272,49 +268,16 @@ void USART2_IRQHandler(void)
   /* USER CODE END USART2_IRQn 1 */
 }
 
-// UART Transmit callback function
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-	memset(tx_buffer_s, '\0', (size_t)BUFFER_LEN); //empty the transmit data buffer to be ready for new data.
+	periph_uart_handle_tx_int_data(huart);
 }
 
-// UART Receive callback function
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-
-	 if(rx_data_s == '\r') // If we get the "Enter" character (carriage return ASCII) from the terminal.
-	 {
-		 char* hello_cmd = "hello"; // this is the command we want to look for from the sender.
-
-		 if (strcmp(hello_cmd, rx_buffer_s) == 0) // string compare the command against what we received from the sender.
-		 {
-			 // if the comparison is okay, move the response into the transmit buffer.
-			 const char *reponse = "Hello to you too!\n";
-			 strcpy((char* )tx_buffer_s, reponse);
-		 }
-		 else
-		 {
-			 // if the comparison is not okay, move the error response into the transmit buffer.
-			 const char *error = "Uh oh, something didn't work...\n";
-			 strcpy((char* )tx_buffer_s, error);
-		 }
-
-
-		 HAL_UART_Transmit(&huart2, tx_buffer_s, (uint16_t)BUFFER_LEN, 100); // transmit the data buffer out the UART Tx pin.
-		 memset(tx_buffer_s, '\0', (size_t)BUFFER_LEN); //empty the transmit data buffer to be ready for new data.
-		 memset(rx_buffer_s, '\0', (size_t)BUFFER_LEN); //empty the receive data buffer to be ready for new data.
-		 counter_s = 0; // reset the counter to be ready for new data.
-
-	 }
-	 else
-	 {
-		 // if there is data coming into the rx_data pointer that isn't the "Enter" character then add it to the buffer.
-		 rx_buffer_s[counter_s++] = rx_data_s;
-	 }
-
-	 // Get ready for new data in rx_data_s pointer.
-	 HAL_UART_Receive_IT(&huart2, &rx_data_s, 1);
+	periph_uart_handle_rx_int_data(huart);
 }
+
 /* USER CODE END 4 */
 
 /**
