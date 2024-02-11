@@ -107,23 +107,24 @@ int main(void)
 
   if (periph_uart_init(&huart2) == false)
   {
-	  assert(false);
+    assert(false);
   }
 
-//  if (periph_i2c_init(&hi2c1) == false)
-//  {
-//	  assert(false);
-//  }
-//
-//
-//  const char *mpu6050_msg = "mpu6050 Device Detected\r\n";
-//
-//  bool device_present = mpu6050_get_who_am_i();
-//  if (device_present)
-//  {
-//	  periph_uart_send_tx_data(&huart2, mpu6050_msg, 26);
-//  }
+  if (periph_i2c_init(&hi2c1) == false)
+  {
+    assert(false);
+  }
 
+
+  char mpu6050_msg[] = "mpu6050 Detected\r\n";
+  uint16_t buffer_len = strlen(mpu6050_msg);
+
+  bool device_present = mpu6050_get_who_am_i();
+  if (device_present)
+  {
+    periph_uart_send_tx_data(&huart2, mpu6050_msg, buffer_len);
+  }
+ 
   /* USER CODE END 2 */
 
   /* Infinite loop */
