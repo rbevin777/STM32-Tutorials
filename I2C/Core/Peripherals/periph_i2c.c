@@ -53,16 +53,17 @@ bool periph_i2c_tx(uint16_t device_add, uint8_t *data)
  * \param[in] device_add - Address of the register we want to read data from.
  * \retval    rx_data - Data read from a register address given.
  */
-uint8_t periph_i2c_rx(uint16_t device_add)
+bool periph_i2c_rx(uint16_t device_add, uint8_t reg_add, uint8_t *reg_val)
 {
-	uint8_t *rx_data = 0;
+	bool rx_okay = false;
 	if(module_init_s)
 	{
-		HAL_StatusTypeDef i2c_rx_okay = HAL_I2C_Master_Receive(&hi2c_s, device_add, rx_data, I2C_MAX_DATA_SIZE, I2C_MAX_TIMEOUT);
-		if(i2c_rx_okay == HAL_OK)
+		HAL_StatusTypeDef i2c_tx_okay = HAL_I2C_Master_Transmit(&hi2c_s, &device_add, &reg_add, I2C_MAX_DATA_SIZE, I2C_MAX_TIMEOUT);
+		HAL_StatusTypeDef i2c_rx_okay = HAL_I2C_Master_Receive(&hi2c_s, &device_add, reg_val, I2C_MAX_DATA_SIZE, I2C_MAX_TIMEOUT);
+		if((i2c_tx_okay == HAL_OK) && (i2c_rx_okay == HAL_OK))
 		{
-			*rx_data = 0;
+			rx_okay = true;
 		}
 	}
-	return *rx_data;
+	return rx_okay;
 }
