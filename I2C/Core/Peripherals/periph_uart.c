@@ -7,17 +7,18 @@
 
 /**********************  INCLUDES **********************/
 #include "periph_uart.h"
+#include <assert.h>
 
 #include <string.h>
 
 
 /******************  PRIVATE VARIABLES ******************/
 static bool init_okay_s = false; // used to make sure public functions cannot be called unless module is initialized.
-static uint8_t tx_buffer_s[MAX_BUFFER_LEN]; // rx_data buffer
-static uint8_t rx_buffer_s[MAX_BUFFER_LEN]; // tx_data buffer
+static uint8_t tx_buffer_s[MAX_BUFFER_LEN] = {""}; // rx_data buffer
+static uint8_t rx_buffer_s[MAX_BUFFER_LEN] = {""}; // tx_data buffer
 static uint8_t rx_data_s; // receive buffer
 static uint32_t counter_s = 0; // count how many bytes are received
-
+static UART_HandleTypeDef huart_s;
 
 /****************** PUBLIC FUNCTIONS *******************/
 /*!
@@ -28,7 +29,12 @@ static uint32_t counter_s = 0; // count how many bytes are received
 bool periph_uart_init(UART_HandleTypeDef *huart)
 {
 	bool init_okay = false;
-	HAL_StatusTypeDef tx_setup_ok = HAL_UART_Transmit_IT(huart, tx_buffer_s, MAX_BUFFER_LEN);
+	huart_s = *huart;
+
+	memset(tx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN); //empty the transmit data buffer to be ready for new data.
+    memset(rx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN); //empty the receive data buffer to be ready for new data.
+
+    HAL_StatusTypeDef tx_setup_ok = HAL_UART_Transmit_IT(huart, tx_buffer_s, MAX_BUFFER_LEN);
 	HAL_StatusTypeDef rx_setup_ok = HAL_UART_Receive_IT(huart, &rx_data_s, 1);
 	if(tx_setup_ok == HAL_OK && rx_setup_ok == HAL_OK)
 	{
@@ -40,7 +46,6 @@ bool periph_uart_init(UART_HandleTypeDef *huart)
 
 /*!
  * \brief     Setup function to init uart with the correct data buffers
- * \param[in] huart - pointer to the uart handle we want to use.
  */
 void periph_uart_handle_tx_int_data(UART_HandleTypeDef *huart)
 {
@@ -52,7 +57,6 @@ void periph_uart_handle_tx_int_data(UART_HandleTypeDef *huart)
 
 /*!
  * \brief     Setup function to init uart with the correct data buffers
- * \param[in] huart - Pointer to the uart handle we want to use.
  */
 void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart)
 {
@@ -66,13 +70,13 @@ void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart)
 			 {
 				 // if the comparison is okay, move the response into the transmit buffer.
 				 const char *reponse = "Hello to you too!\n";
-				 strcpy((char* )tx_buffer_s, reponse);
+				 strcpy(tx_buffer_s, reponse);
 			 }
 			 else
 			 {
 				 // if the comparison is not okay, move the error response into the transmit buffer.
 				 const char *error = "Uh oh, something didn't work...\n";
-				 strcpy((char* )tx_buffer_s, error);
+				 strcpy(tx_buffer_s, error);
 			 }
 
 
@@ -80,7 +84,6 @@ void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart)
 			 memset(tx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN); //empty the transmit data buffer to be ready for new data.
 			 memset(rx_buffer_s, '\0', (size_t)MAX_BUFFER_LEN); //empty the receive data buffer to be ready for new data.
 			 counter_s = 0; // reset the counter to be ready for new data.
-
 		 }
 		 else
 		 {
@@ -95,15 +98,18 @@ void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart)
 
 /*!
  * \brief    Setup function to init uart with the correct data buffers
- * \param[in] huart - Pointer to the uart handle we want to use.
  * \param[in] tx_buff - Buffer with the message we want to send.
  * \param[in] buffer_len - Maximum lenght of the buffer we want to send.
  */
-void periph_uart_send_tx_data(UART_HandleTypeDef *huart, const char tx_buff[MAX_BUFFER_LEN], uint8_t buffer_len)
+void periph_uart_send_tx_data(const char *tx_buff, uint16_t buffer_len)
 {
 	if(init_okay_s)
 	{
-		strcpy((char* )tx_buffer_s, tx_buff);
-		HAL_UART_Transmit(huart, tx_buffer_s, (uint16_t)MAX_BUFFER_LEN, buffer_len);
+		strcpy(tx_buffer_s, tx_buff);
+		HAL_StatusTypeDef okay = HAL_UART_Transmit(&huart_s, tx_buffer_s, buffer_len, 100);
+		if(okay != HAL_OK)
+		{
+			assert(false);
+		}
 	}
 }
