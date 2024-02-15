@@ -13,11 +13,12 @@
 #include <stdbool.h>
 
 
-#define MAX_BUFFER_LEN 100u
+#define MAX_BUFFER_LEN 200u
+#define MAX_UART_TIMEOUT 100u
 
 bool periph_uart_init(UART_HandleTypeDef *huart);
 void periph_uart_handle_tx_int_data(UART_HandleTypeDef *huart);
 void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart);
-void periph_uart_send_tx_data(UART_HandleTypeDef *huart, const char tx_buff[MAX_BUFFER_LEN], uint8_t buffer_len);
+void periph_uart_send_tx_data(const char *tx_buff, uint16_t buffer_len);
 
 #endif /* PERIPHERALS_PERIPH_UART_H_ */
