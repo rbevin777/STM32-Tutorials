@@ -54,7 +54,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 static bool flag_s = false;
 
-static const char *it_works_s = "IT'S WORKING!\r\n";
+static const char it_works_s[] = "IT'S WORKING!\r\n";
 
 /* USER CODE END PV */
 
@@ -103,28 +103,27 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(5000);
+
 
   if (periph_uart_init(&huart2) == false)
   {
-    assert(false);
+	  assert(false);
   }
 
   if (periph_i2c_init(&hi2c1) == false)
   {
-    assert(false);
+	  assert(false);
   }
 
+  // small delay needed to allow UART to work properly. Still not exactly sure why.
+  // This link has a theory but not a why: https://community.st.com/t5/stm32-mcus-products/uart-losing-the-first-byte/td-p/257397
+  HAL_Delay(1);
 
-  char mpu6050_msg[] = "mpu6050 Detected\r\n";
-  uint16_t buffer_len = strlen(mpu6050_msg);
-
-  bool device_present = mpu6050_get_who_am_i();
-  if (device_present)
+  if(mpu6050_get_who_am_i() == false)
   {
-    periph_uart_send_tx_data(&huart2, mpu6050_msg, buffer_len);
+	  assert(false);
   }
- 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -137,9 +136,11 @@ int main(void)
 	  // Code kept in place from the Interrupt tutorial. Operated by pressing the user button.
 	  if (flag_s == true)
 	  {
-		  periph_uart_send_tx_data(&huart2, it_works_s, 100);
+		  uint16_t buffer_len = strlen(it_works_s);
+		  periph_uart_send_tx_data(it_works_s, buffer_len);
 		  flag_s = false;
 	  }
+	  __NOP();
   }
   /* USER CODE END 3 */
 }
@@ -253,7 +254,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 923076;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -287,6 +288,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
