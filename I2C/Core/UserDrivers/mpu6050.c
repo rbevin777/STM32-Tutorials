@@ -22,6 +22,9 @@ bool mpu6050_get_who_am_i(void)
 	if(reg_val == WHO_AM_I_VALUE)
 	{
 		device_present = true;
+		char mpu6050_msg_s[] = "mpu6050 Detected\r\n";
+		uint16_t buffer_len = strlen(mpu6050_msg_s);
+		periph_uart_send_tx_data(mpu6050_msg_s, buffer_len);
 	}
 	return device_present;
 }
