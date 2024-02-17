@@ -19,7 +19,7 @@
 
 
 bool periph_i2c_init(const I2C_HandleTypeDef *hi2c);
-bool periph_i2c_tx(uint16_t device_add, uint8_t *data);
+bool periph_i2c_tx(uint16_t device_add, uint8_t reg_add, uint8_t *data, uint16_t data_len);
 bool periph_i2c_rx(uint16_t device_add, uint8_t reg_add, uint8_t *rx_data);
 
 #endif /* PERIPHERALS_PERIPH_I2C_H_ */
