@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 
-#define MAX_BUFFER_LEN 200u
+#define MAX_BUFFER_LEN 100u
 #define MAX_UART_TIMEOUT 100u
 
 bool periph_uart_init(UART_HandleTypeDef *huart);
