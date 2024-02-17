@@ -65,6 +65,8 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
+void plot_accelerometer_axis(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -79,6 +81,7 @@ static void MX_I2C1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  uint16_t buffer_len = 0u;
 
   /* USER CODE END 1 */
 
@@ -119,9 +122,11 @@ int main(void)
   // This link has a theory but not a why: https://community.st.com/t5/stm32-mcus-products/uart-losing-the-first-byte/td-p/257397
   HAL_Delay(1);
 
-  if(mpu6050_get_who_am_i() == false)
+  if(mpu6050_init() == true)
   {
-	  assert(false);
+	  char mpu6050_msg_s[] = "mpu6050 Detected\r\n";
+	  buffer_len = strlen(mpu6050_msg_s);
+	  periph_uart_send_tx_data(mpu6050_msg_s, buffer_len);
   }
 
   /* USER CODE END 2 */
@@ -136,11 +141,13 @@ int main(void)
 	  // Code kept in place from the Interrupt tutorial. Operated by pressing the user button.
 	  if (flag_s == true)
 	  {
-		  uint16_t buffer_len = strlen(it_works_s);
+		  buffer_len = strlen(it_works_s);
 		  periph_uart_send_tx_data(it_works_s, buffer_len);
 		  flag_s = false;
 	  }
-	  __NOP();
+
+	  plot_accelerometer_axis();
+	  HAL_Delay(250);
   }
   /* USER CODE END 3 */
 }
@@ -357,6 +364,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	periph_uart_handle_rx_int_data(huart);
 }
 
+/*!
+  * \brief Reads x, y and z accelerometer axis, formats the data into a string and prints the data over the uart.
+  */
+void plot_accelerometer_axis(void)
+{
+	uint16_t buffer_len = 0;
+	char x_axis_string[MAX_BUFFER_LEN] = "";
+	char y_axis_string[MAX_BUFFER_LEN] = "";
+  char z_axis_string[MAX_BUFFER_LEN] = "";
+
+	int16_t x_axis = mpu6050_get_x_axis_data();
+	int16_t y_axis = mpu6050_get_y_axis_data();
+	int16_t z_axis = mpu6050_get_z_axis_data();
+
+	snprintf(x_axis_string, MAX_BUFFER_LEN, "x Axis %d    ", x_axis);
+	snprintf(y_axis_string, MAX_BUFFER_LEN, "Y Axis %d    ", y_axis);
+	snprintf(z_axis_string, MAX_BUFFER_LEN, "z Axis %d\r\n", z_axis);
+
+	buffer_len = strlen(x_axis_string);
+	periph_uart_send_tx_data(x_axis_string, buffer_len);
+	buffer_len = strlen(y_axis_string);
+	periph_uart_send_tx_data(y_axis_string, buffer_len);
+	buffer_len = strlen(z_axis_string);
+	periph_uart_send_tx_data(z_axis_string, buffer_len);
+}
 /* USER CODE END 4 */
 
 /**
