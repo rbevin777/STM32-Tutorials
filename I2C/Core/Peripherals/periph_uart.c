@@ -66,17 +66,17 @@ void periph_uart_handle_rx_int_data(UART_HandleTypeDef *huart)
 		 {
 			 char* hello_cmd = "hello"; // this is the command we want to look for from the sender.
 
-			 if (strcmp(hello_cmd, rx_buffer_s) == 0) // string compare the command against what we received from the sender.
+			 if (strcmp(hello_cmd, (char*)rx_buffer_s) == 0) // string compare the command against what we received from the sender.
 			 {
 				 // if the comparison is okay, move the response into the transmit buffer.
 				 const char *reponse = "Hello to you too!\n";
-				 strcpy(tx_buffer_s, reponse);
+				 strcpy((char*)tx_buffer_s, reponse);
 			 }
 			 else
 			 {
 				 // if the comparison is not okay, move the error response into the transmit buffer.
 				 const char *error = "Uh oh, something didn't work...\n";
-				 strcpy(tx_buffer_s, error);
+				 strcpy((char*)tx_buffer_s, error);
 			 }
 
 
@@ -105,7 +105,7 @@ void periph_uart_send_tx_data(const char *tx_buff, uint16_t buffer_len)
 {
 	if(init_okay_s)
 	{
-		strcpy(tx_buffer_s, tx_buff);
+		strcpy((char*)tx_buffer_s, tx_buff);
 		HAL_StatusTypeDef okay = HAL_UART_Transmit(&huart_s, tx_buffer_s, buffer_len, 100);
 		if(okay != HAL_OK)
 		{
