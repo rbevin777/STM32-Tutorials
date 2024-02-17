@@ -10,11 +10,14 @@
 
 #include <stdint.h>
 
-#define MPU6050_DEV_ADD_AD0_LOW 0xD0 // Device address of the MPU6050.
-#define MPU6050_DEV_ADD_AD0_HIGH 0xE0 // Device address of the MPU6050.
-
-#define WHO_AM_I_VALUE 0x68u  // This is the value of the data in the WHO_AM_I register.
+#define MPU6050_DEV_ADD_AD0_LOW 0xD0u // Device address of the MPU6050 when pin AD0 is pulled low
+#define MPU6050_DEV_ADD_AD0_HIGH 0xE0u // Device address of the MPU6050 when pin AD0 is pulled high
 
 
-bool mpu6050_get_who_am_i(void);
+bool mpu6050_init(void);
+int16_t mpu6050_get_x_axis_data(void);
+int16_t mpu6050_get_y_axis_data(void);
+int16_t mpu6050_get_z_axis_data(void);
+
+
 #endif /* USERDRIVERS_MPU6050_H_ */
