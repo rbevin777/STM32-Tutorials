@@ -9,3 +9,10 @@ Also, there are some electronic circuits used throughout this series and require
 
 ## How to Use This Repo
 The main branch of this repo contains the Hello World project from the first video in the tutorial series. Every subsequent video is then housed on it's own branch. Simply clone the project and checkout the branch of the tutorial you wish to use.
+
+## Pointer Example
+To build the pointer example code, enter the `Pointers Example` directory and run `cmake -S . -B Build`
+
+Then enter the `Build` directory and run `make`
+
+Then to run the executable run `./exe_output`
