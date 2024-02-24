@@ -59,7 +59,7 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static const char *hello_world_buffer = "B\r\n";
+static const char *hello_world_buffer = "B"; //01000010
 static HAL_StatusTypeDef ok_notok_s = HAL_OK;
 /* USER CODE END 0 */
 
@@ -104,6 +104,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  // First we transmit the hello world buffer out the transmit pin of UART2.
+	  ok_notok_s = HAL_UART_Transmit(&huart2, (uint8_t *)hello_world_buffer, 1, 100);
+
+	  if(ok_notok_s == HAL_OK)
+	  {
+		  // If the UART transmission is okay then the green LED will stay off.
+		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+	  }
+	  else
+	  {
+		  // If the UART transmission is not okay then the green LED will be turned on.
+		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
+	  }
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -168,7 +182,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 11;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 150;
+  htim3.Init.Period = 250;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -227,7 +241,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_8;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&huart2) != HAL_OK)
