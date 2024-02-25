@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,8 +59,9 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static const char *hello_world_buffer = "B"; //01000010
+static const char *hello_world_buffer = "B\r\n"; //01000010
 static HAL_StatusTypeDef ok_notok_s = HAL_OK;
+static bool flag_s = false;
 /* USER CODE END 0 */
 
 /**
@@ -105,19 +106,22 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  // First we transmit the hello world buffer out the transmit pin of UART2.
-	  ok_notok_s = HAL_UART_Transmit(&huart2, (uint8_t *)hello_world_buffer, 1, 100);
+	  if (flag_s)
+	  {
+		  ok_notok_s = HAL_UART_Transmit(&huart2, (uint8_t *)hello_world_buffer, 3, 100);
 
-	  if(ok_notok_s == HAL_OK)
-	  {
-		  // If the UART transmission is okay then the green LED will stay off.
-		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+		  if(ok_notok_s == HAL_OK)
+		  {
+			  // If the UART transmission is okay then the green LED will stay off.
+			  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
+		  }
+		  else
+		  {
+			  // If the UART transmission is not okay then the green LED will be turned on.
+			  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
+		  }
+		  flag_s = false;
 	  }
-	  else
-	  {
-		  // If the UART transmission is not okay then the green LED will be turned on.
-		  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
-	  }
-	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -180,9 +184,9 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 11;
+  htim3.Init.Prescaler = 2000;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 250;
+  htim3.Init.Period = 31984;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -194,7 +198,7 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -204,18 +208,17 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -266,7 +269,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
@@ -274,7 +276,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(UART_CLK_GPIO_Port, UART_CLK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(FREQ_EX_GPIO_Port, FREQ_EX_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : GREEN_LED_Pin */
   GPIO_InitStruct.Pin = GREEN_LED_Pin;
@@ -283,12 +285,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GREEN_LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : UART_CLK_Pin */
-  GPIO_InitStruct.Pin = UART_CLK_Pin;
+  /*Configure GPIO pin : FREQ_EX_Pin */
+  GPIO_InitStruct.Pin = FREQ_EX_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(UART_CLK_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(FREQ_EX_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -297,7 +299,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  HAL_GPIO_TogglePin(UART_CLK_GPIO_Port, UART_CLK_Pin);
+  HAL_GPIO_TogglePin(FREQ_EX_GPIO_Port, FREQ_EX_Pin);
+  flag_s = true;
 }
 /* USER CODE END 4 */
 
