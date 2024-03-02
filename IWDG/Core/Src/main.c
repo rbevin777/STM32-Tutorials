@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdbool.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,6 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+IWDG_HandleTypeDef hiwdg;
+
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
@@ -53,15 +55,15 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_IWDG_Init(void);
 /* USER CODE BEGIN PFP */
+static const char *starting_buff = "Starting\r\n";
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static const char *hello_world_buffer = "B\r\n"; //01000010
-static HAL_StatusTypeDef ok_notok_s = HAL_OK;
-static bool flag_s = false;
+
 /* USER CODE END 0 */
 
 /**
@@ -94,8 +96,11 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_Delay(1);
+  (void)HAL_UART_Transmit(&huart2, (uint8_t *)starting_buff, 10, 100);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,23 +110,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // First we transmit the hello world buffer out the transmit pin of UART2.
-	  if (flag_s)
-	  {
-		  ok_notok_s = HAL_UART_Transmit(&huart2, (uint8_t *)hello_world_buffer, 3, 100);
-
-		  if(ok_notok_s == HAL_OK)
-		  {
-			  // If the UART transmission is okay then the green LED will stay off.
-			  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_RESET);
-		  }
-		  else
-		  {
-			  // If the UART transmission is not okay then the green LED will be turned on.
-			  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
-		  }
-		  flag_s = false;
-	  }
+	  HAL_GPIO_WritePin(GREEN_LED_GPIO_Port, GREEN_LED_Pin, GPIO_PIN_SET);
+	  HAL_Delay(5000);
   }
   /* USER CODE END 3 */
 }
@@ -138,9 +128,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
@@ -162,6 +153,35 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+  hiwdg.Init.Window = 0;
+  hiwdg.Init.Reload = 1000;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
+
 }
 
 /**
@@ -297,11 +317,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  HAL_GPIO_TogglePin(FREQ_EX_GPIO_Port, FREQ_EX_Pin);
-  flag_s = true;
-}
+
 /* USER CODE END 4 */
 
 /**
